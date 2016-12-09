@@ -35,9 +35,12 @@ After:
 ```
 ![Sample](/Artefacts/DocumentationFiles/Animation.gif)
 ## Conditions
+The analyzer is applied to code pattern that meet these criteria. 
+
 * There must be a getter only property with a simple `return` statement
 * The `return` statement must reference a `private readonly` field defined in the same type
 * The type of the field must match the type of the property
+
 The `same type` rule prevents breaking changes that might be caused by references to the backing field like this one:
 ```cs
     class ViewModel
@@ -77,7 +80,7 @@ After:
 ## Limitations and pitfalls
 There are some glitches with the code fixer you should be aware of.
 ### Only assignments to the backing fields are renamed
-The fixer renames assignements in the constructor to the backing field to the property name. Other references to the backing are **not** renamed. After the fix is applied the compiler error `CS0103 The name does not exist in the current context` reports those missing renames.
+The fixer renames assignments in the constructor to the backing field to the property name. Other references to the backing are **not** renamed. After the fix is applied the compiler error `CS0103 The name does not exist in the current context` reports those missing renames.
 ```cs
     class AwesomeService
     {
@@ -131,9 +134,13 @@ After the fix the constructor assignment looks like this:
             Logger = Logger; // <- CS1717 Assignment made to same variable
         }
 ```
-The compiler reports warning `CS1717 Assignment made to same variable`. This can be fixed by renaming the constructor parameter or by appending `this.` to the property reference.
+The compiler reports warning `CS1717 Assignment made to same variable`. This can be fixed by renaming the constructor parameter or by prepending `this.` to the property reference.
+
 ### Batch fixer
+
 ![Batch fixer](/Artefacts/DocumentationFiles/Batchfixer.png)
 The batch fixer for the *document*, *project* and *solution* struggles to fix more than several properties at a time per class. 
 The fixer is able to process every second property. To work arround this issue run the fixer several times until no more occurences are reported.
+
 ## Installation
+The analyzer is avliable as a Visual Studio 2015 extension and can be found at [https://marketplace.visualstudio.com/vsgallery/9daec1e5-ff49-4d52-a036-f2c0d06cf077](https://marketplace.visualstudio.com/vsgallery/9daec1e5-ff49-4d52-a036-f2c0d06cf077). To install the extension from Visual Studio search for *Diagnostic analyzer for getter only auto props* in the *Extensions and updates* dialog.
