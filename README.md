@@ -101,7 +101,7 @@ The fixer renames assignments in the constructor to the backing field to the pro
 
         public AwesomeService(ILogger logger)
         {
-            _Logger = logger; // <- _Logger becomes Logger. Assignments to the backing field are taken into account.
+            _Logger = logger; // <- _Logger becomes Logger. Assignments to the backing field are renamed.
             _Logger.Log("Constructor called"); // <- _Logger this will not be renamed to Logger.
         }
 

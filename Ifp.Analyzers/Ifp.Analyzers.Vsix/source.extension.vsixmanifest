@@ -4,7 +4,9 @@
     <Identity Id="Ifp.Analyzers" Version="1.0" Language="en-US" Publisher="Martin Strecker"/>
     <DisplayName>Diagnostic analyzer for getter only auto props</DisplayName>
     <Description xml:space="preserve">Diagnostic analyzer, that replaces getter only properties backed by a readonly field with a getter only auto property.</Description>
-    <Tags>Analyzer, property, readonly</Tags>
+    <MoreInfo>https://github.com/ifpanalytics/Ifp.Analyzers</MoreInfo>
+    <GettingStartedGuide>https://github.com/ifpanalytics/Ifp.Analyzers</GettingStartedGuide>
+    <Tags>Refactoring, Productivity, C#, analyzer, refactor, roslyn, C# 6 </Tags>
   </Metadata>
   <Installation>
     <InstallationTarget Version="[14.0]" Id="Microsoft.VisualStudio.Pro" />
