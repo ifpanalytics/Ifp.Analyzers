@@ -1,7 +1,8 @@
 # Ifp.Analyzers
 This projects contains a C# diagnostic analyzer that finds getter only properties with backing readonly field and converts them to getter-only auto-properties.
 ## What it does
-This analyzer is inspired by the [C# Essetntials](https://github.com/DustinCampbell/CSharpEssentials) [Use Getter-Only Auto-Property](https://github.com/DustinCampbell/CSharpEssentials#use-getter-only-auto-property) analyzer by [Dustin Campbell](https://github.com/DustinCampbell). It provides a code fix for a constructor injected services that are made accessible by a getter only property backed by a readonly field.
+This analyzer is inspired by the [Use Getter-Only Auto-Property](https://github.com/DustinCampbell/CSharpEssentials#use-getter-only-auto-property) in the [C# Essentials](https://github.com/DustinCampbell/CSharpEssentials)  analyzer extension by [Dustin Campbell](https://github.com/DustinCampbell). It provides a code fix for a constructor injected services that are made accessible by a getter only property backed by a readonly field.
+
 Before:
 ```cs
     class AwesomeService
@@ -21,6 +22,7 @@ Before:
         }
     }
 ```
+
 After:
 ```cs
     class AwesomeService
@@ -33,8 +35,11 @@ After:
         protected ILogger Logger { get; }
     }
 ```
+
 ![Sample](/Artefacts/DocumentationFiles/Animation.gif)
+
 ## Conditions
+
 The analyzer is applied to code pattern that meet these criteria. 
 
 * There must be a getter only property with a simple `return` statement
@@ -65,21 +70,29 @@ The `same type` rule prevents breaking changes that might be caused by reference
         }
     }
 ```
+
 ## Field initializer 
+
 Field initializer will be appended to the property.
+
 Before:
 ```cs
         readonly Dictionary<int, string> _Dict = new Dictionary<int, string>();
         ...
         public Dictionary<int, string> Dict { get { return _Dict; } }
 ```
+
 After:
 ```cs
         public Dictionary<int, string> Dict { get; } = new Dictionary<int, string>();
 ```
+
 ## Limitations and pitfalls
+
 There are some glitches with the code fixer you should be aware of.
+
 ### Only assignments to the backing fields are renamed
+
 The fixer renames assignments in the constructor to the backing field to the property name. Other references to the backing are **not** renamed. After the fix is applied the compiler error `CS0103 The name does not exist in the current context` reports those missing renames.
 ```cs
     class AwesomeService
@@ -127,6 +140,7 @@ In the example below the name of the constructor parameter `Logger` matches the 
         }
     }
 ```
+
 After the fix the constructor assignment looks like this:
 ```cs
         public AwesomeService(ILogger Logger)
@@ -134,13 +148,16 @@ After the fix the constructor assignment looks like this:
             Logger = Logger; // <- CS1717 Assignment made to same variable
         }
 ```
+
 The compiler reports warning `CS1717 Assignment made to same variable`. This can be fixed by renaming the constructor parameter or by prepending `this.` to the property reference.
 
 ### Batch fixer
 
 ![Batch fixer](/Artefacts/DocumentationFiles/Batchfixer.png)
-The batch fixer for the *document*, *project* and *solution* struggles to fix more than several properties at a time per class. 
-The fixer is able to process every second property. To work arround this issue run the fixer several times until no more occurences are reported.
+
+The batch fixer for the *document*, *project* and *solution* struggles to fix several properties at a time per class. 
+The fixer is able to process about every second property. To work arround this issue run the fixer several times until no more occurences are reported. This is an known limitation of the default batchfixer of roslyn (see [https://github.com/dotnet/roslyn/issues/320](https://github.com/dotnet/roslyn/issues/320) and related issues). 
 
 ## Installation
-The analyzer is avliable as a Visual Studio 2015 extension and can be found at [https://marketplace.visualstudio.com/vsgallery/9daec1e5-ff49-4d52-a036-f2c0d06cf077](https://marketplace.visualstudio.com/vsgallery/9daec1e5-ff49-4d52-a036-f2c0d06cf077). To install the extension from Visual Studio search for *Diagnostic analyzer for getter only auto props* in the *Extensions and updates* dialog.
+
+The analyzer is available as a Visual Studio 2015 extension and can be found at [https://marketplace.visualstudio.com/vsgallery/9daec1e5-ff49-4d52-a036-f2c0d06cf077](https://marketplace.visualstudio.com/vsgallery/9daec1e5-ff49-4d52-a036-f2c0d06cf077). To install the extension from Visual Studio search for *Diagnostic analyzer for getter only auto props* in the *Extensions and updates* dialog.
