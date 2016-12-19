@@ -28,53 +28,45 @@ namespace Ifp.Analyzers
 
         public override void Initialize(AnalysisContext context)
         {
-            context.RegisterSymbolAction(AnalyzeSymbol, SymbolKind.NamedType);
+            context.RegisterSymbolAction(AnalyzeSymbol, SymbolKind.Property);
         }
 
         private static void AnalyzeSymbol(SymbolAnalysisContext context)
         {
-            var namedTypeSymbol = (INamedTypeSymbol)context.Symbol;
+            var namedTypeSymbol = (IPropertySymbol)context.Symbol;
             var properties = GetPropsWithOnlyGettersAndReadonlyBackingField(namedTypeSymbol, context);
             if (properties == null) return;
-            foreach (var p in properties)
-            {
-                var diagnostic = Diagnostic.Create(Rule, p.Key.Locations[0], p.Key.Name);
-                context.ReportDiagnostic(diagnostic);
-            }
+            var diagnostic = Diagnostic.Create(Rule, properties.Item1.Locations[0], properties.Item1.Name);
+            context.ReportDiagnostic(diagnostic);
         }
 
-        private static IDictionary<ISymbol, IFieldSymbol> GetPropsWithOnlyGettersAndReadonlyBackingField(INamedTypeSymbol type, SymbolAnalysisContext context)
+        private static Tuple<ISymbol, IFieldSymbol> GetPropsWithOnlyGettersAndReadonlyBackingField(IPropertySymbol propertySymbol, SymbolAnalysisContext context)
         {
-            Dictionary<ISymbol, IFieldSymbol> candidates = null;
             SemanticModel model = null;
-            var allProperties = type.GetMembers().Where(s => s.Kind == SymbolKind.Property);
-            foreach (var propertySymbol in allProperties.Cast<IPropertySymbol>())
-            {
-                if (!propertySymbol.IsReadOnly || propertySymbol.IsStatic) continue;
-                var getMethod = propertySymbol.GetMethod;
-                if (getMethod == null) continue;
-                var reference = getMethod.DeclaringSyntaxReferences.FirstOrDefault();
-                if (reference == null) continue;
-                var declaration = reference.GetSyntax(context.CancellationToken) as AccessorDeclarationSyntax;
-                if (declaration?.Body == null) continue;
-                var returnNode = declaration.Body.ChildNodes().FirstOrDefault();
-                if (returnNode?.Kind() != SyntaxKind.ReturnStatement) continue;
-                var fieldNode = returnNode.ChildNodes().FirstOrDefault();
-                if (fieldNode == null) continue;
-                if (fieldNode.Kind() == SyntaxKind.SimpleMemberAccessExpression)
-                    fieldNode = (fieldNode as MemberAccessExpressionSyntax).Name;
-                if (fieldNode.Kind() != SyntaxKind.IdentifierName) continue;
-                model = model ?? context.Compilation.GetSemanticModel(fieldNode.SyntaxTree);
-                var symbolInfo = model.GetSymbolInfo(fieldNode).Symbol as IFieldSymbol;
-                if (symbolInfo != null &&
-                    symbolInfo.IsReadOnly &&
-                    (symbolInfo.DeclaredAccessibility == Accessibility.Private || symbolInfo.DeclaredAccessibility == Accessibility.NotApplicable) &&
-                    symbolInfo.ContainingType == propertySymbol.ContainingType &&
-                    symbolInfo.Type.Equals(propertySymbol.Type))
+            if (!propertySymbol.IsReadOnly || propertySymbol.IsStatic) return null;
+            var getMethod = propertySymbol.GetMethod;
+            if (getMethod == null) return null;
+            var reference = getMethod.DeclaringSyntaxReferences.FirstOrDefault();
+            if (reference == null) return null;
+            var declaration = reference.GetSyntax(context.CancellationToken) as AccessorDeclarationSyntax;
+            if (declaration?.Body == null) return null;
+            var returnNode = declaration.Body.ChildNodes().FirstOrDefault();
+            if (returnNode?.Kind() != SyntaxKind.ReturnStatement) return null;
+            var fieldNode = returnNode.ChildNodes().FirstOrDefault();
+            if (fieldNode == null) return null;
+            if (fieldNode.Kind() == SyntaxKind.SimpleMemberAccessExpression)
+                fieldNode = (fieldNode as MemberAccessExpressionSyntax).Name;
+            if (fieldNode.Kind() != SyntaxKind.IdentifierName) return null;
+            model = model ?? context.Compilation.GetSemanticModel(fieldNode.SyntaxTree);
+            var symbolInfo = model.GetSymbolInfo(fieldNode).Symbol as IFieldSymbol;
+            if (symbolInfo != null &&
+                symbolInfo.IsReadOnly &&
+                (symbolInfo.DeclaredAccessibility == Accessibility.Private || symbolInfo.DeclaredAccessibility == Accessibility.NotApplicable) &&
+                symbolInfo.ContainingType == propertySymbol.ContainingType &&
+                symbolInfo.Type.Equals(propertySymbol.Type))
 
-                    (candidates ?? (candidates = new Dictionary<ISymbol, IFieldSymbol>())).Add(propertySymbol, symbolInfo);
-            }
-            return candidates;
+                return new Tuple<ISymbol, IFieldSymbol>(propertySymbol, symbolInfo);
+            return null;
         }
     }
 }

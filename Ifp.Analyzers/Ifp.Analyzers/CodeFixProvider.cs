@@ -51,46 +51,53 @@ namespace Ifp.Analyzers
             var root = await document.GetSyntaxRootAsync(cancellationToken);
             var token = root.FindToken(propertyDeclarationSpan.Start);
             var property = token.Parent.AncestorsAndSelf().OfType<PropertyDeclarationSyntax>().First();
-            var fieldVariableDeclarationSyntax = await GetFieldDeclarationSyntaxNode(property, cancellationToken, semanticModel);
-            if (fieldVariableDeclarationSyntax == null) return document;
-            var fieldDeclarationSyntax = fieldVariableDeclarationSyntax.AncestorsAndSelf().FirstOrDefault(sn => sn is FieldDeclarationSyntax) as FieldDeclarationSyntax;
-            var fieldReferences = await GetFieldReferences(fieldVariableDeclarationSyntax, cancellationToken, semanticModel);
-            var nodesToUpdate = fieldReferences.Cast<SyntaxNode>().Union(Enumerable.Repeat(property, 1)).Union(Enumerable.Repeat(fieldDeclarationSyntax, 1));
-            var newRoot = root.ReplaceNodes(nodesToUpdate, (sn1, sn2) =>
-            {
-                if (sn1 is IdentifierNameSyntax)
-                {
-                    var identifier = sn1 as IdentifierNameSyntax;
-                    var newIdentifier = SyntaxFactory.IdentifierName(property.Identifier.Text);
-                    newIdentifier = newIdentifier.WithLeadingTrivia(identifier.GetLeadingTrivia()).WithTrailingTrivia(identifier.GetTrailingTrivia()).WithAdditionalAnnotations(Formatter.Annotation);
-                    return newIdentifier;
-                }
-                if (sn1 is FieldDeclarationSyntax)
-                    return sn1.RemoveNode(sn1, SyntaxRemoveOptions.KeepUnbalancedDirectives);
-                if (sn1 is PropertyDeclarationSyntax)
-                {
-                    var prop = sn1 as PropertyDeclarationSyntax;
-                    var fieldInitilization = GetFieldInitialization(fieldDeclarationSyntax);
-                    var getter = SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
-                    var accessorList = SyntaxFactory.AccessorList(
-                        SyntaxFactory.List(new[] {
-                            getter
-                        }));
-                    var newProp = prop.WithAccessorList(accessorList);
-                    if (fieldInitilization != null)
-                        newProp = newProp.WithInitializer(fieldInitilization).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
-                    newProp = newProp.WithLeadingTrivia(prop.GetLeadingTrivia()).WithTrailingTrivia(prop.GetTrailingTrivia()).WithAdditionalAnnotations(Formatter.Annotation);
-                    return newProp;
-                }
-                throw new NotSupportedException();
-            });
+            var fieldVariableDeclaratorSyntax = await GetFieldDeclarationSyntaxNode(property, cancellationToken, semanticModel);
+            if (fieldVariableDeclaratorSyntax == null) return document;
+            var fieldReferences = await GetFieldReferences(fieldVariableDeclaratorSyntax, cancellationToken, semanticModel);
+            var nodesToUpdate = fieldReferences.Cast<SyntaxNode>().Union(Enumerable.Repeat(property, 1)).Union(Enumerable.Repeat(fieldVariableDeclaratorSyntax, 1));
+            //var newRoot = FixWithReplaceNodes(root, property, fieldDeclarationSyntax, nodesToUpdate);
+            var newRoot = FixWithTrackNode(root, property, fieldVariableDeclaratorSyntax, nodesToUpdate);
             var resultDocument = document.WithSyntaxRoot(newRoot);
             return resultDocument;
         }
 
-        private EqualsValueClauseSyntax GetFieldInitialization(FieldDeclarationSyntax fieldDeclarationSyntax)
+        private SyntaxNode FixWithTrackNode(SyntaxNode root, PropertyDeclarationSyntax property, VariableDeclaratorSyntax fieldVariableDeclaratorSyntax, IEnumerable<SyntaxNode> nodesToUpdate)
         {
-            var declaration = fieldDeclarationSyntax.Declaration;
+            var newRoot = root.TrackNodes(nodesToUpdate);
+            var fieldReferences = newRoot.GetCurrentNodes(nodesToUpdate.OfType<IdentifierNameSyntax>());
+            foreach (var identifier in fieldReferences)
+            {
+                var newIdentifier = SyntaxFactory.IdentifierName(property.Identifier.Text);
+                newIdentifier = newIdentifier.WithLeadingTrivia(identifier.GetLeadingTrivia()).WithTrailingTrivia(identifier.GetTrailingTrivia()).WithAdditionalAnnotations(Formatter.Annotation);
+                newRoot = newRoot.ReplaceNode(identifier, newIdentifier);
+            }
+            var prop = newRoot.GetCurrentNode(nodesToUpdate.OfType<PropertyDeclarationSyntax>().Single());
+            var fieldInitilization = GetFieldInitialization(fieldVariableDeclaratorSyntax);
+            var getter = SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
+            var accessorList = SyntaxFactory.AccessorList(
+                SyntaxFactory.List(new[] {
+                            getter
+                }));
+            var newProp = prop.WithAccessorList(accessorList);
+            if (fieldInitilization != null)
+                newProp = newProp.WithInitializer(fieldInitilization).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
+            newProp = newProp.WithLeadingTrivia(prop.GetLeadingTrivia()).WithTrailingTrivia(prop.GetTrailingTrivia()).WithAdditionalAnnotations(Formatter.Annotation);
+            newRoot = newRoot.ReplaceNode(prop, newProp);
+            var variableDeclarator = newRoot.GetCurrentNode(nodesToUpdate.OfType<VariableDeclaratorSyntax>().Single());
+            var declaration = variableDeclarator.AncestorsAndSelf().OfType<VariableDeclarationSyntax>().First();
+            if (declaration.Variables.Count == 1)
+            {
+                var fieldDeclaration = declaration.AncestorsAndSelf().OfType<FieldDeclarationSyntax>().First();
+                newRoot = newRoot.RemoveNode(fieldDeclaration, SyntaxRemoveOptions.KeepUnbalancedDirectives);
+            }
+            else
+                newRoot = newRoot.RemoveNode(variableDeclarator, SyntaxRemoveOptions.KeepUnbalancedDirectives);
+            return newRoot;
+        }
+
+        private EqualsValueClauseSyntax GetFieldInitialization(VariableDeclaratorSyntax fieldVariableDeclaratorSyntax)
+        {
+            var declaration = fieldVariableDeclaratorSyntax.AncestorsAndSelf().OfType<VariableDeclarationSyntax>().First();
             if (declaration == null)
                 return null;
             var variableWithPotentialInitizer = declaration.Variables.LastOrDefault();

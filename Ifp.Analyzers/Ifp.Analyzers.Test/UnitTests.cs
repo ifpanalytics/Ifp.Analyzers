@@ -13,7 +13,7 @@ namespace Ifp.Analyzers.Test
     {
 
         [TestMethod]
-        public void TestMethod1()
+        public void EmptyCodeBlockPassesWithoutErrors()
         {
             var test = @"";
 
@@ -21,7 +21,7 @@ namespace Ifp.Analyzers.Test
         }
 
         [TestMethod]
-        public void TestMethod2()
+        public void SimplePropertyGetsTransformed()
         {
             var test = @"
     using System;
@@ -47,9 +47,9 @@ namespace Ifp.Analyzers.Test
     }";
             var expected = new DiagnosticResult
             {
-                Id = "Ifp0001",
-                Message = String.Format("Property '{0}' can be convertered to getter only property", "Value"),
-                Severity = DiagnosticSeverity.Warning,
+                Id = "IFP0001",
+                Message = String.Format("Property '{0}' can be convertered to getter-only auto-property", "Value"),
+                Severity = DiagnosticSeverity.Info,
                 Locations =
                     new[] {
                             new DiagnosticResultLocation("Test0.cs", 20, 27)
@@ -83,7 +83,7 @@ namespace Ifp.Analyzers.Test
         }
 
         [TestMethod]
-        public void TestMethod3()
+        public void FieldInitializerIsPreserved()
         {
             var test = @"
     using System;
@@ -109,9 +109,9 @@ namespace Ifp.Analyzers.Test
     }";
             var expected = new DiagnosticResult
             {
-                Id = "Ifp0001",
-                Message = String.Format("Property '{0}' can be convertered to getter only property", "Value"),
-                Severity = DiagnosticSeverity.Warning,
+                Id = "IFP0001",
+                Message = String.Format("Property '{0}' can be convertered to getter-only auto-property", "Value"),
+                Severity = DiagnosticSeverity.Info,
                 Locations =
                     new[] {
                             new DiagnosticResultLocation("Test0.cs", 20, 27)
@@ -130,12 +130,170 @@ namespace Ifp.Analyzers.Test
 
     namespace ConsoleApplication1
     {
-        TypeName(string value)
+        class TypeName
         {   
-            Value=value;
+            readonly string value2 = ""InitValue"";
+
+            TypeName(string value)
+            {
+                this.Value = value;
+            }
+
+        public string Value { get; } = ""InitValue"";
+    }
+    }";
+            VerifyCSharpFix(test, fixtest);
         }
 
-        public string Value { get; }
+        [TestMethod]
+        public void MultiplePropertiesPerClassGetTranformed()
+        {
+            var test = @"
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+    using System.Diagnostics;
+
+    namespace ConsoleApplication1
+    {
+        class TypeName
+        {   
+            readonly string value, value2=""InitValue"";
+
+            TypeName(string value)
+            {
+                this.value=value;
+                this.value2=value;
+            }
+
+            public string Value { get { return this.value; } }
+            public string Value2 { get { return this.value2; } }
+        }
+    }";
+            var expected1 = new DiagnosticResult
+            {
+                Id = "IFP0001",
+                Message = String.Format("Property '{0}' can be convertered to getter-only auto-property", "Value"),
+                Severity = DiagnosticSeverity.Info,
+                Locations =
+                    new[] {
+                            new DiagnosticResultLocation("Test0.cs", 21, 27)
+                        }
+            };
+            var expected2 = new DiagnosticResult
+            {
+                Id = "IFP0001",
+                Message = String.Format("Property '{0}' can be convertered to getter-only auto-property", "Value2"),
+                Severity = DiagnosticSeverity.Info,
+                Locations =
+                    new[] {
+                            new DiagnosticResultLocation("Test0.cs", 22, 27)
+                        }
+            };
+
+            VerifyCSharpDiagnostic(test, new DiagnosticResult[] { expected1, expected2 });
+
+            var fixtest = @"
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+    using System.Diagnostics;
+
+    namespace ConsoleApplication1
+    {
+        class TypeName
+        {   
+
+            TypeName(string value)
+            {
+                this.Value = value;
+                this.Value2 = value;
+            }
+
+        public string Value { get; } = ""InitValue"";
+        public string Value2 { get; } = ""InitValue"";
+    }
+    }";
+            VerifyCSharpFix(test, fixtest);
+        }
+
+        [TestMethod]
+        public void MultiplePropertiesPerClassWithFieldInitilizerAndUnusedFieldsGetTranformed()
+        {
+            var test = @"
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+    using System.Diagnostics;
+
+    namespace ConsoleApplication1
+    {
+        class TypeName
+        {   
+            readonly string value, value2, value3=""InitValue"";
+
+            TypeName(string value)
+            {
+                this.value=value;
+                this.value2=value;
+            }
+
+            public string Value { get { return this.value; } }
+            public string Value2 { get { return this.value2; } }
+        }
+    }";
+            var expected1 = new DiagnosticResult
+            {
+                Id = "IFP0001",
+                Message = String.Format("Property '{0}' can be convertered to getter-only auto-property", "Value"),
+                Severity = DiagnosticSeverity.Info,
+                Locations =
+                    new[] {
+                            new DiagnosticResultLocation("Test0.cs", 21, 27)
+                        }
+            };
+            var expected2 = new DiagnosticResult
+            {
+                Id = "IFP0001",
+                Message = String.Format("Property '{0}' can be convertered to getter-only auto-property", "Value2"),
+                Severity = DiagnosticSeverity.Info,
+                Locations =
+                    new[] {
+                            new DiagnosticResultLocation("Test0.cs", 22, 27)
+                        }
+            };
+
+            VerifyCSharpDiagnostic(test, new DiagnosticResult[] { expected1, expected2 });
+
+            var fixtest = @"
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+    using System.Diagnostics;
+
+    namespace ConsoleApplication1
+    {
+        class TypeName
+        {   
+            readonly string value3=""InitValue"";
+
+            TypeName(string value)
+            {
+                this.Value = value;
+                this.Value2 = value;
+            }
+
+        public string Value { get; } = ""InitValue"";
+        public string Value2 { get; } = ""InitValue"";
+    }
     }";
             VerifyCSharpFix(test, fixtest);
         }
