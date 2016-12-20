@@ -43,7 +43,7 @@ namespace Ifp.Analyzers
         private static Tuple<ISymbol, IFieldSymbol> GetPropsWithOnlyGettersAndReadonlyBackingField(IPropertySymbol propertySymbol, SymbolAnalysisContext context)
         {
             SemanticModel model = null;
-            if (!propertySymbol.IsReadOnly || propertySymbol.IsStatic) return null;
+            if (!propertySymbol.IsReadOnly || propertySymbol.IsStatic || !propertySymbol.CanBeReferencedByName) return null;
             var getMethod = propertySymbol.GetMethod;
             if (getMethod == null) return null;
             var reference = getMethod.DeclaringSyntaxReferences.FirstOrDefault();

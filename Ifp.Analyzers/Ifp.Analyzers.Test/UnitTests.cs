@@ -298,6 +298,100 @@ namespace Ifp.Analyzers.Test
             VerifyCSharpFix(test, fixtest);
         }
 
+        [TestMethod]
+        public void TypeOfPropertyMustFitTypeOfBackingField()
+        {
+            var test = @"
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+    using System.Diagnostics;
+
+    namespace ConsoleApplication1
+    {
+        class TypeName
+        {   
+            readonly IList<string> value, value2;
+
+            TypeName(IEnumerable<string> value)
+            {
+                this.value=value.ToList();
+                this.value2=value.ToList();
+            }
+
+            public IEnumerable<string> Value { get { return this.value; } }
+            public IList<string> Value2 { get { return this.value2; } }
+        }
+    }";
+            var expected = new DiagnosticResult
+            {
+                Id = "IFP0001",
+                Message = String.Format("Property '{0}' can be convertered to getter-only auto-property", "Value2"),
+                Severity = DiagnosticSeverity.Info,
+                Locations =
+                    new[] {
+                            new DiagnosticResultLocation("Test0.cs", 22, 34)
+                        }
+            };
+
+            VerifyCSharpDiagnostic(test, expected);
+
+            var fixtest = @"
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+    using System.Diagnostics;
+
+    namespace ConsoleApplication1
+    {
+        class TypeName
+        {   
+            readonly IList<string> value;
+
+            TypeName(IEnumerable<string> value)
+            {
+                this.value=value.ToList();
+                this.Value2 = value.ToList();
+            }
+
+            public IEnumerable<string> Value { get { return this.value; } }
+        public IList<string> Value2 { get; }
+    }
+    }";
+            VerifyCSharpFix(test, fixtest);
+        }
+
+        [TestMethod]
+        public void ExplicitPropertyImplementationsAreIgnored()
+        {
+            var test = @"
+namespace ConsoleApplication1
+{
+    interface ITestInterface
+    {
+        string Property { get; }
+    }
+    class TestKlasse2: ITestInterface
+    {
+        readonly string _Property;
+
+        string ITestInterface.Property
+        {
+            get
+            {
+                return _Property;
+            }
+        }
+    }
+}
+";
+            VerifyCSharpDiagnostic(test);
+        }
+
         protected override CodeFixProvider GetCSharpCodeFixProvider() => new IfpAnalyzersCodeFixProvider();
 
         protected override DiagnosticAnalyzer GetCSharpDiagnosticAnalyzer() => new IfpAnalyzersAnalyzer();

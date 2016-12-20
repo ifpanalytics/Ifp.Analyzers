@@ -27,7 +27,7 @@ namespace Ifp.Analyzers
         }
         public sealed override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(IfpAnalyzersAnalyzer.DiagnosticId);
 
-        public sealed override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
+        public sealed override FixAllProvider GetFixAllProvider() => SerialFixAllProvider.Instance;
 
         public sealed override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
