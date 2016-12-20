@@ -1,4 +1,4 @@
 @echo off
 set /p pw="Passwort: "
-vsixsigntool.exe sign /f CodeSign.pfx /p %pw% E:\Ifp.Analyzers.Vsix.vsix
+%~dp0\vsixsigntool.exe sign /f CodeSign.pfx /p %pw% "%~dp0..\..\Ifp.Analyzers\Ifp.Analyzers.Vsix\bin\Release\Ifp.Analyzers.Vsix.vsix"
 Pause
