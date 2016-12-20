@@ -1,7 +1,7 @@
 # Ifp.Analyzers
 This projects contains a C# diagnostic analyzer that finds getter only properties with backing readonly field and converts them to getter-only auto-properties.
 ## What it does
-This analyzer is inspired by the [Use Getter-Only Auto-Property](https://github.com/DustinCampbell/CSharpEssentials#use-getter-only-auto-property) in the [C# Essentials](https://github.com/DustinCampbell/CSharpEssentials)  analyzer extension by [Dustin Campbell](https://github.com/DustinCampbell). It provides a code fix for a constructor injected services that are made accessible by a getter only property backed by a readonly field.
+This analyzer is inspired by the [Use Getter-Only Auto-Property](https://github.com/DustinCampbell/CSharpEssentials#use-getter-only-auto-property) in the [C# Essentials](https://github.com/DustinCampbell/CSharpEssentials)  analyzer extension by [Dustin Campbell](https://github.com/DustinCampbell). It provides a code fix for constructor injected services that are made accessible by a getter only property backed by a readonly field.
 
 Before:
 ```cs
@@ -156,7 +156,7 @@ The compiler reports warning `CS1717 Assignment made to same variable`. This can
 ![Batch fixer](/Artefacts/DocumentationFiles/Batchfixer.png)
 
 The default batch fixer for the *document*, *project* and *solution* struggles to fix several properties at a time per class.
-Therefore a custom *FixAllProvider* was written. This *provider* is slow but can fix all occurrences at once without leaving artefacts or missing applicable properties. 
+Therefore, a custom *FixAllProvider* was introduced in version 1.1. This *provider* is slow but can fix all occurrences at once without leaving artefacts or missing applicable properties. 
 
 ## Installation
 
