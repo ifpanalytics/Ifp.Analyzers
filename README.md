@@ -156,7 +156,7 @@ The compiler reports warning `CS1717 Assignment made to same variable`. This can
 ![Batch fixer](/Artefacts/DocumentationFiles/Batchfixer.png)
 
 The default batch fixer for the *document*, *project* and *solution* struggles to fix several properties at a time per class.
-Therefore a custom *FixAllProvider* was written. This *provider* is slow but can fix all o. 
+Therefore a custom *FixAllProvider* was written. This *provider* is slow but can fix all occurrences at once without leaving artefacts or missing applicable properties. 
 
 ## Installation
 
