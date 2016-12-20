@@ -1,11 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="Ifp.Analyzers" Version="1.0" Language="en-US" Publisher="Martin Strecker"/>
+    <Identity Id="Ifp.Analyzers" Version="1.1" Language="en-US" Publisher="Martin Strecker"/>
     <DisplayName>Diagnostic analyzer for getter only auto props</DisplayName>
     <Description xml:space="preserve">Diagnostic analyzer, that replaces getter only properties backed by a readonly field with a getter only auto property.</Description>
     <MoreInfo>https://github.com/ifpanalytics/Ifp.Analyzers</MoreInfo>
+    <License>http://www.apache.org/licenses/LICENSE-2.0.html</License>
     <GettingStartedGuide>https://github.com/ifpanalytics/Ifp.Analyzers</GettingStartedGuide>
+    <ReleaseNotes>https://github.com/ifpanalytics/Ifp.Analyzers</ReleaseNotes>
     <Tags>Refactoring, Productivity, C#, analyzer, refactor, roslyn, C# 6 </Tags>
   </Metadata>
   <Installation>

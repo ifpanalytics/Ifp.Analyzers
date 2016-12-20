@@ -155,9 +155,32 @@ The compiler reports warning `CS1717 Assignment made to same variable`. This can
 
 ![Batch fixer](/Artefacts/DocumentationFiles/Batchfixer.png)
 
-The batch fixer for the *document*, *project* and *solution* struggles to fix several properties at a time per class. 
-The fixer is able to process about every second property. To work arround this issue run the fixer several times until no more occurences are reported. This is an known limitation of the default batchfixer of roslyn (see [https://github.com/dotnet/roslyn/issues/320](https://github.com/dotnet/roslyn/issues/320) and related issues). 
+The default batch fixer for the *document*, *project* and *solution* struggles to fix several properties at a time per class.
+Therefore a custom *FixAllProvider* was written. This *provider* is slow but can fix all o. 
 
 ## Installation
 
 The analyzer is available as a Visual Studio 2015 extension and can be found at [https://marketplace.visualstudio.com/vsgallery/9daec1e5-ff49-4d52-a036-f2c0d06cf077](https://marketplace.visualstudio.com/vsgallery/9daec1e5-ff49-4d52-a036-f2c0d06cf077). To install the extension from Visual Studio search for *Diagnostic analyzer for getter only auto props* in the *Extensions and updates* dialog.
+
+## Licence
+
+Licensed under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.html)
+
+## Version History
+
+### 1.1 2016-12-20
+
+#### Bug fixes
+
+* Explicit property implementation are ignored
+* Field initializer with several [declarators](https://msdn.microsoft.com/en-us/library/aa664742(v=vs.71).aspx) are handled correctly (e.g. `readonly int _Property1, _Property2 = int.MaxValue;`)
+* Performance: Analyzer is now applied to properties instead of classes
+* Perfromance: Syntaxtree transformation now uses "TrackNodes" for the transformation steps
+
+#### New features
+
+* Custom FixAllProvider introduced
+
+### 1.0 2016-12-09
+
+* Initial publication
