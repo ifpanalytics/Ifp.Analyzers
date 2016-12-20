@@ -5,7 +5,7 @@
     <DisplayName>Diagnostic analyzer for getter only auto props</DisplayName>
     <Description xml:space="preserve">Diagnostic analyzer, that replaces getter only properties backed by a readonly field with a getter only auto property.</Description>
     <MoreInfo>https://github.com/ifpanalytics/Ifp.Analyzers</MoreInfo>
-    <License>http://www.apache.org/licenses/LICENSE-2.0.html</License>
+    <License>Licence.txt</License>
     <GettingStartedGuide>https://github.com/ifpanalytics/Ifp.Analyzers</GettingStartedGuide>
     <ReleaseNotes>https://github.com/ifpanalytics/Ifp.Analyzers</ReleaseNotes>
     <Tags>Refactoring, Productivity, C#, analyzer, refactor, roslyn, C# 6 </Tags>
