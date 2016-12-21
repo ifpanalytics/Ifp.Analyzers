@@ -168,6 +168,16 @@ Licensed under the [Apache License, Version 2.0](http://www.apache.org/licenses/
 
 ## Version History
 
+### 1.2 2016-12-21
+
+#### Bug fixes
+
+* Fixed issue [#2 *Wrong initializer picked if there are more than one.*](https://github.com/ifpanalytics/Ifp.Analyzers/issues/2)
+
+#### New features
+
+* VSIX is code signed  
+
 ### 1.1 2016-12-20
 
 #### Bug fixes
