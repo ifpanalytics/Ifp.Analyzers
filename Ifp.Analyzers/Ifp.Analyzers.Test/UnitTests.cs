@@ -392,6 +392,51 @@ namespace ConsoleApplication1
             VerifyCSharpDiagnostic(test);
         }
 
+        [TestMethod]
+        public void Issue_002_SeveralInitializerAreAssignedProperly()
+        {
+            var test = @"
+namespace ConsoleApplication1
+{
+    class TestKlasse3
+    {
+        readonly int a = 0, x, y = 1, z = 2;
+
+        public int X
+        {
+            get
+            {
+                return x;
+            }
+        }
+    }
+}";
+            var expected = new DiagnosticResult
+            {
+                Id = "IFP0001",
+                Message = String.Format("Property '{0}' can be convertered to getter-only auto-property", "X"),
+                Severity = DiagnosticSeverity.Info,
+                Locations =
+                    new[] {
+                            new DiagnosticResultLocation("Test0.cs", 8, 20)
+                        }
+            };
+
+            VerifyCSharpDiagnostic(test, expected);
+
+            var fixtest = @"
+namespace ConsoleApplication1
+{
+    class TestKlasse3
+    {
+        readonly int a = 0, y = 1, z = 2;
+
+        public int X { get; } = 1;
+    }
+}";
+            VerifyCSharpFix(test, fixtest);
+        }
+
         protected override CodeFixProvider GetCSharpCodeFixProvider() => new IfpAnalyzersCodeFixProvider();
 
         protected override DiagnosticAnalyzer GetCSharpDiagnosticAnalyzer() => new IfpAnalyzersAnalyzer();

@@ -100,7 +100,7 @@ namespace Ifp.Analyzers
             var declaration = fieldVariableDeclaratorSyntax.AncestorsAndSelf().OfType<VariableDeclarationSyntax>().First();
             if (declaration == null)
                 return null;
-            var variableWithPotentialInitizer = declaration.Variables.LastOrDefault();
+            var variableWithPotentialInitizer = declaration.Variables.SkipWhile(v => v != fieldVariableDeclaratorSyntax).Where(v => v.Initializer != null).FirstOrDefault();
             if (variableWithPotentialInitizer == null)
                 return null;
             var initializer = variableWithPotentialInitizer.Initializer;
